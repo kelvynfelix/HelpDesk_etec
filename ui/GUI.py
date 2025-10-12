@@ -2,29 +2,15 @@ import customtkinter as ctk
 from database import db_configure as mydb
 from database.db_configure import Admin
 from utils.auth import codigo
-
-
-def verificar_login():
-    email_digitado = campo_email.get()
-    senha_digitada = campo_senha.get()
-    admin_db = mydb.session.query(Admin).filter_by(email=email_digitado, senha=senha_digitada).first()
-    if admin_db:
-        if email_digitado == admin_db.email and senha_digitada == admin_db.senha:
-            tela_auth()
-            mostrar_mensagem_app("Login feito com sucesso!", "green")
-        else:
-            mostrar_mensagem_app("Login incorreto!")
-    else:
-        mostrar_mensagem_app("Usuário não encontrado!")
+from tkinter import filedialog
+import tkinter as tk
+import os
 
 
 def tela_auth():
     tela_autencicacao = ctk.CTkToplevel(app)
     tela_autencicacao.geometry("500x400")
     tela_autencicacao.title("Autenticação de 2 fatores")
-
-    def apagar_tela():
-        tela_autencicacao.destroy()
 
     def verificar_codigo_auth():
         codigo_digitado = campo_codigo.get()
@@ -44,28 +30,142 @@ def tela_auth():
 
 
 # noinspection PyTypeChecker
-def mostrar_mensagem_app(texto, cor="red"):
-    resultado_login.configure(text=texto, text_color=cor)
-    app.after(2000, lambda: resultado_login.configure(text=""))
+
+
+def abrir_login_admin():
+    app.withdraw()
+
+    def verificar_login():
+        email_digitado = campo_email.get()
+        senha_digitada = campo_senha.get()
+        admin_db = mydb.session.query(Admin).filter_by(email=email_digitado, senha=senha_digitada).first()
+        if admin_db:
+            if email_digitado == admin_db.email and senha_digitada == admin_db.senha:
+                tela_auth()
+                mostrar_mensagem_app("Login feito com sucesso!", "green")
+            else:
+                mostrar_mensagem_app("Login incorreto!")
+        else:
+            mostrar_mensagem_app("Usuário não encontrado!")
+
+    # noinspection PyTypeChecker
+    def mostrar_mensagem_app(texto, cor="red"):
+        resultado_login.configure(text=texto, text_color=cor)
+        app.after(2000, lambda: resultado_login.configure(text=""))
+
+    tela_login_admin = ctk.CTkToplevel(app)
+    tela_login_admin.geometry("300x300")
+    tela_login_admin.title("Login de Administrador")
+    label_email = ctk.CTkLabel(tela_login_admin, text="Email: ")
+    label_email.pack(pady=10)
+    campo_email = ctk.CTkEntry(tela_login_admin, placeholder_text="Digite seu email", width=200)
+    campo_email.pack(pady=10)
+    label_senha = ctk.CTkLabel(tela_login_admin, text="Senha: ")
+    label_senha.pack(pady=10)
+    campo_senha = ctk.CTkEntry(tela_login_admin, placeholder_text="Digite sua senha", show="*", width=200)
+    campo_senha.pack(pady=10)
+    botao_login = ctk.CTkButton(tela_login_admin, text="login", command=verificar_login)
+    botao_login.pack(pady=10)
+    resultado_login = ctk.CTkLabel(tela_login_admin, text="")
+    resultado_login.pack(pady=10)
 
 
 ctk.set_appearance_mode("dark")
 app = ctk.CTk()
 app.title("Sistema de login")
-app.geometry("300x300")
+app.geometry("800x780")
+app.resizable(False, False)
 
-label_email = ctk.CTkLabel(app, text="Email: ")
-label_email.pack(pady=10)
-campo_email = ctk.CTkEntry(app, placeholder_text="Digite seu email", width=200)
-campo_email.pack(pady=10)
-label_senha = ctk.CTkLabel(app, text="Senha: ")
-label_senha.pack(pady=10)
-campo_senha = ctk.CTkEntry(app, placeholder_text="Digite sua senha", show="*", width=200)
-campo_senha.pack(pady=10)
+card = ctk.CTkFrame(app, corner_radius=15, width=450, height=750)
+card.pack(pady=30)
+card.pack_propagate(False)
 
-botao_login = ctk.CTkButton(app, text="login", command=verificar_login)
-botao_login.pack(pady=10)
-resultado_login = ctk.CTkLabel(app, text="")
-resultado_login.pack(pady=10)
+label_chamados_titulo = ctk.CTkLabel(card, text="Chamados", text_color="#00BFFF", font=("Arial", 18, "bold")).pack(
+    pady=10)
+label_nome = ctk.CTkLabel(card, text="Nome Completo:", text_color="#898989").pack(side="top", anchor="w", padx="100")
+
+campo_nome = ctk.CTkEntry(card, placeholder_text="Digite seu nome Completo", width=300, justify="center",
+                          height=40).pack()
+
+label_num_pc = ctk.CTkLabel(card, text="Número do pc:", text_color="#898989").pack(side="top", anchor="w", padx="100")
+
+campo_num_pc = ctk.CTkEntry(card, placeholder_text="Informe o número da maquina com problema", width=300,
+                            justify="center", height=40).pack()
+
+label_obs_num_pc = ctk.CTkLabel(card, text="Esse número fica identificado no topo da maquina, em branco.",
+                                text_color="#898989", font=("Arial", 10, "bold")).pack()
+
+label_opc_local = ctk.CTkLabel(card, text="Local do problema:", text_color="#898989", ).pack()
+
+locais = ["laboratório 1", "laboratório 2", "laboratório 3", "laboratório 4", "Sala Maker", "Outro"]
+
+options_local = ctk.CTkOptionMenu(card, values=locais, width=120)
+
+options_local.set("Selecione o Local")
+
+options_local.pack()
+
+label_outra_opc = ctk.CTkLabel(card, text="Outro local (opcional):", text_color="#898989", ).pack(side="top",
+                                                                                                  anchor="w",
+                                                                                                  padx="100")
+campo_outra_opc = ctk.CTkEntry(card, placeholder_text="Digite outro local, se necessario", width=300, justify="center",
+                               height=40).pack()
+frame_textarea = ctk.CTkFrame(card, corner_radius=10)
+frame_textarea.pack(padx=35, pady=10, fill="both", expand=True)
+
+campo_descricao = tk.Text(
+    frame_textarea,
+    width=50,
+    height=8,
+    wrap="word",
+    font=("Arial", 13),
+    bg="#333333",
+    fg="white",
+    insertbackground="white",
+    bd=0
+
+)
+campo_descricao.pack(padx=5, pady=5)
+campo_descricao.pack_propagate(False)
+
+# Placeholder manual
+placeholder = "Descreva o problema encontrado no computador..."
+campo_descricao.insert("1.0", placeholder)
+
+
+def on_focus_in(event):
+    if campo_descricao.get("1.0", "end-1c") == placeholder:
+        campo_descricao.delete("1.0", "end")
+
+
+def on_focus_out(event):
+    if campo_descricao.get("1.0", "end-1c").strip() == "":
+        campo_descricao.insert("1.0", placeholder)
+
+
+campo_descricao.bind("<FocusIn>", on_focus_in)
+campo_descricao.bind("<FocusOut>", on_focus_out)
+
+label_anexo = ctk.CTkLabel(card, text="Anexo (opcional):", text_color="#898989").pack()
+
+
+def anexar_arquivo():
+    global label_ver_anexo
+    caminho = filedialog.askopenfilename(
+        title="Selecione um arquivo",
+        filetypes=[("Todos os arquivos", "*.*")]
+    )
+    nome_arquivo = os.path.basename(caminho)
+    label_ver_anexo.configure(text=f"arquivo anexado: {nome_arquivo}", text_color="#90EE90")
+
+
+botao = ctk.CTkButton(card, text="Anexar arquivo", command=anexar_arquivo).pack(pady=10)
+label_ver_anexo = ctk.CTkLabel(card, text="Nenhum arquivo Anexado")
+label_ver_anexo.pack(pady=3)
+btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado")
+btn_enviar_chamado.pack(pady=10)
+
+btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
+btn_abrir_Login_admin.place(x=645, y=35)
 
 app.mainloop()
