@@ -70,6 +70,7 @@ def abrir_login_admin():
     resultado_login.pack(pady=10)
 
 
+# Criação da GUI
 ctk.set_appearance_mode("dark")
 app = ctk.CTk()
 app.title("Sistema de login")
@@ -80,20 +81,23 @@ card = ctk.CTkFrame(app, corner_radius=15, width=450, height=750)
 card.pack(pady=30)
 card.pack_propagate(False)
 
-label_chamados_titulo = ctk.CTkLabel(card, text="Chamados", text_color="#00BFFF", font=("Arial", 18, "bold")).pack(
-    pady=10)
-label_nome = ctk.CTkLabel(card, text="Nome Completo:", text_color="#898989").pack(side="top", anchor="w", padx="100")
+label_chamados_titulo = ctk.CTkLabel(card, text="Chamados", text_color="#00BFFF", font=("Arial", 18, "bold"))
+label_chamados_titulo.pack(pady=10)
+label_nome = ctk.CTkLabel(card, text="Nome Completo:", text_color="#898989")
+label_nome.pack(side="top", anchor="w", padx="100")
+campo_nome = ctk.CTkEntry(card, placeholder_text="Digite seu nome Completo", width=300, justify="center", height=40)
+campo_nome.pack()
 
-campo_nome = ctk.CTkEntry(card, placeholder_text="Digite seu nome Completo", width=300, justify="center",
-                          height=40).pack()
-
-label_num_pc = ctk.CTkLabel(card, text="Número do pc:", text_color="#898989").pack(side="top", anchor="w", padx="100")
+label_num_pc = ctk.CTkLabel(card, text="Número do pc:", text_color="#898989")
+label_num_pc.pack(side="top", anchor="w", padx="100")
 
 campo_num_pc = ctk.CTkEntry(card, placeholder_text="Informe o número da maquina com problema", width=300,
-                            justify="center", height=40).pack()
+                            justify="center", height=40)
+campo_num_pc.pack()
 
 label_obs_num_pc = ctk.CTkLabel(card, text="Esse número fica identificado no topo da maquina, em branco.",
-                                text_color="#898989", font=("Arial", 10, "bold")).pack()
+                                text_color="#898989", font=("Arial", 10, "bold"))
+label_obs_num_pc.pack()
 
 frame_local = ctk.CTkFrame(card, fg_color="transparent")
 frame_local.pack(pady=(5, 0))
@@ -108,9 +112,11 @@ def ao_mudar_local(valor):
     if valor == "Outro":
         label_outra_opc.pack(pady=(10, 0))
         campo_outra_opc.pack(pady=(0, 10))
+        return True
     else:
         label_outra_opc.pack_forget()
         campo_outra_opc.pack_forget()
+        return False
 
 
 options_local = ctk.CTkOptionMenu(frame_local, values=locais, command=ao_mudar_local, width=180)
@@ -138,7 +144,6 @@ campo_descricao = tk.Text(
 campo_descricao.pack(padx=5, pady=5)
 campo_descricao.pack_propagate(False)
 
-# Placeholder manual
 placeholder = "Descreva o problema encontrado no computador..."
 campo_descricao.insert("1.0", placeholder)
 
@@ -153,10 +158,48 @@ def on_focus_out(event):
         campo_descricao.insert("1.0", placeholder)
 
 
+def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="400x170", expansivel=False):
+    popup = ctk.CTkToplevel(app)
+    popup.title(titulo)
+    popup.geometry(tamanho)
+    popup.resizable(expansivel, expansivel)
+
+    # ctk.CTkLabel(popup, text=mensagem).pack(pady=20)
+    # ctk.CTkButton(popup, text="OK", command=popup.destroy).pack(pady=10)
+    popup.grab_set()  # impede interação com a janela principal
+    popup.attributes("-topmost", True)
+    frame_msg = ctk.CTkFrame(popup, fg_color="transparent")
+    frame_msg.pack(pady=15, padx=10, fill="x")
+
+    # Ícone de aviso
+    icone_label = ctk.CTkLabel(frame_msg, text="⚠️", font=("Arial", 30))
+    icone_label.pack(side="left", padx=10)
+
+    msg_label = ctk.CTkLabel(frame_msg, text=mensagem, font=("Arial", 12))
+    msg_label.pack(side="left", padx=10)
+
+    btn_ok = ctk.CTkButton(popup, text=txt_btn, width=110, command=popup.destroy)
+    btn_ok.pack(pady=10)
+
+
+def enviar_chamado():
+    if campo_nome.get().strip() == "":
+        abrir_popup("é necessario preencher o campo nome")
+    elif campo_num_pc.get().strip() == "":
+        abrir_popup("é necessario preencher o campo número da maquina")
+    elif options_local.get().strip() == "Selecione o Local":
+        abrir_popup("Você deve selecionar um Local!")
+    elif campo_outra_opc.get().strip() == "" and options_local.get().strip() == "Outro":
+        abrir_popup("é necessario preencher o campo Local")
+    elif campo_descricao.get("1.0", "end-1c").strip() == "":
+        abrir_popup("é necessario preencher o campo com uma descrição")
+
+
 campo_descricao.bind("<FocusIn>", on_focus_in)
 campo_descricao.bind("<FocusOut>", on_focus_out)
 
-label_anexo = ctk.CTkLabel(card, text="Anexo (opcional):", text_color="#898989").pack()
+label_anexo = ctk.CTkLabel(card, text="Anexo (opcional):", text_color="#898989")
+label_anexo.pack()
 
 
 def anexar_arquivo():
@@ -169,13 +212,17 @@ def anexar_arquivo():
     label_ver_anexo.configure(text=f"arquivo anexado: {nome_arquivo}", text_color="#90EE90")
 
 
-botao = ctk.CTkButton(card, text="Anexar arquivo", command=anexar_arquivo).pack(pady=10)
+botao = ctk.CTkButton(card, text="Anexar arquivo", command=anexar_arquivo)
+botao.pack(pady=10)
 label_ver_anexo = ctk.CTkLabel(card, text="Nenhum arquivo Anexado")
 label_ver_anexo.pack(pady=3)
-btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado")
+btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado", command=enviar_chamado)
 btn_enviar_chamado.pack(pady=10)
 
 btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
 btn_abrir_Login_admin.place(x=645, y=35)
+
+# Configuração de envio para o DB
+
 
 app.mainloop()
