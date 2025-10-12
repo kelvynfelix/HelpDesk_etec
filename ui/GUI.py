@@ -95,21 +95,31 @@ campo_num_pc = ctk.CTkEntry(card, placeholder_text="Informe o número da maquina
 label_obs_num_pc = ctk.CTkLabel(card, text="Esse número fica identificado no topo da maquina, em branco.",
                                 text_color="#898989", font=("Arial", 10, "bold")).pack()
 
-label_opc_local = ctk.CTkLabel(card, text="Local do problema:", text_color="#898989", ).pack()
+frame_local = ctk.CTkFrame(card, fg_color="transparent")
+frame_local.pack(pady=(5, 0))
+
+label_opc_local = ctk.CTkLabel(frame_local, text="Local do problema:", text_color="#898989")
+label_opc_local.pack(pady=(0, 5))
 
 locais = ["laboratório 1", "laboratório 2", "laboratório 3", "laboratório 4", "Sala Maker", "Outro"]
 
-options_local = ctk.CTkOptionMenu(card, values=locais, width=120)
 
+def ao_mudar_local(valor):
+    if valor == "Outro":
+        label_outra_opc.pack(pady=(10, 0))
+        campo_outra_opc.pack(pady=(0, 10))
+    else:
+        label_outra_opc.pack_forget()
+        campo_outra_opc.pack_forget()
+
+
+options_local = ctk.CTkOptionMenu(frame_local, values=locais, command=ao_mudar_local, width=180)
 options_local.set("Selecione o Local")
-
 options_local.pack()
 
-label_outra_opc = ctk.CTkLabel(card, text="Outro local (opcional):", text_color="#898989", ).pack(side="top",
-                                                                                                  anchor="w",
-                                                                                                  padx="100")
-campo_outra_opc = ctk.CTkEntry(card, placeholder_text="Digite outro local, se necessario", width=300, justify="center",
-                               height=40).pack()
+label_outra_opc = ctk.CTkLabel(frame_local, text="Outro local:", text_color="#898989")
+campo_outra_opc = ctk.CTkEntry(frame_local, placeholder_text="Digite o Local", width=250, height=35)
+
 frame_textarea = ctk.CTkFrame(card, corner_radius=10)
 frame_textarea.pack(padx=35, pady=10, fill="both", expand=True)
 
