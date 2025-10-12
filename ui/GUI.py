@@ -217,7 +217,7 @@ def enviar_chamado():
         return
     limpar_formulario()
     # Configuração de envio para o DB
-
+    #teste
 
 campo_descricao.bind("<FocusIn>", on_focus_in)
 campo_descricao.bind("<FocusOut>", on_focus_out)
