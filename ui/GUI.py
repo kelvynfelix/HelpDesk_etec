@@ -182,17 +182,41 @@ def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="400x170", expan
     btn_ok.pack(pady=10)
 
 
+# noinspection PyGlobalUndefined
+def limpar_formulario():
+    global caminho_anexo
+    for campo in [campo_nome, campo_num_pc, campo_outra_opc]:  # apenas Entry aqui
+        campo.delete(0, "end")
+    campo_descricao.delete("1.0", "end")
+    options_local.set("Selecione o Local")
+    caminho_anexo = None
+    label_ver_anexo.configure(text="Nenhum arquivo anexado", text_color="white")
+
+
 def enviar_chamado():
-    if campo_nome.get().strip() == "":
-        abrir_popup("é necessario preencher o campo nome")
-    elif campo_num_pc.get().strip() == "":
-        abrir_popup("é necessario preencher o campo número da maquina")
-    elif options_local.get().strip() == "Selecione o Local":
+    nome_digitado = campo_nome.get()
+    num_pc_digitado = campo_num_pc.get()
+    local_escolhido = options_local.get()
+    outro_local_digitado = campo_outra_opc.get()
+    descricao_digitada = campo_descricao.get("1.0", "end-1c")
+
+    if nome_digitado == "":
+        abrir_popup("É necessário preencher o campo nome")
+        return
+    elif num_pc_digitado == "":
+        abrir_popup("É necessário preencher o campo número da máquina")
+        return
+    elif local_escolhido == "Selecione o Local":
         abrir_popup("Você deve selecionar um Local!")
-    elif campo_outra_opc.get().strip() == "" and options_local.get().strip() == "Outro":
-        abrir_popup("é necessario preencher o campo Local")
-    elif campo_descricao.get("1.0", "end-1c").strip() == "":
-        abrir_popup("é necessario preencher o campo com uma descrição")
+        return
+    elif outro_local_digitado == "" and local_escolhido == "Outro":
+        abrir_popup("É necessário preencher o campo Local")
+        return
+    elif descricao_digitada == "":
+        abrir_popup("É necessário preencher o campo com uma descrição")
+        return
+    limpar_formulario()
+    # Configuração de envio para o DB
 
 
 campo_descricao.bind("<FocusIn>", on_focus_in)
@@ -221,8 +245,5 @@ btn_enviar_chamado.pack(pady=10)
 
 btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
 btn_abrir_Login_admin.place(x=645, y=35)
-
-# Configuração de envio para o DB
-
 
 app.mainloop()
