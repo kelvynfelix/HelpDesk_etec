@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine, Column, String, Integer, Boolean
+from sqlalchemy import create_engine, Column, String, Integer, Boolean, ForeignKey, LargeBinary
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+from sqlalchemy.orm import relationship
 
 caminho_db = os.path.abspath("C:/Dev/Projetos/HelpDesk/database/db_etec.db")
 db = create_engine(f"sqlite:///{caminho_db}")
@@ -29,18 +30,29 @@ class Chamado(Base):
     local = Column("local", String, nullable=False)
     data = Column("data", String, nullable=False)
     pc = Column("pc", String, nullable=False)
-    pendente = Column("pendente", Boolean)
+    pendente = Column("pendente", Boolean, default=True)
     descricao = Column("descricao", String, nullable=False)
-    anexo = Column("anexo", Boolean)
+    anexos = relationship("Anexo", back_populates="chamado")
 
-    def __init__(self, nome, local, data, pc, descricao, anexo, pendente=True):
+    def __init__(self, nome, local, data, pc, descricao, anexos=None, pendente=True):
         self.nome = nome
         self.local = local
         self.data = data
         self.pc = pc
         self.pendente = pendente
         self.descricao = descricao
-        self.anexo = anexo
+        self.anexos = anexos or []
+
+
+class Anexo(Base):
+    __tablename__ = "anexos"
+
+    id = Column(Integer, primary_key=True)
+    nome_arquivo = Column("Nome_Anexo", String)
+    conteudo = Column("conteudo", LargeBinary)
+    chamado_id = Column("chamadoID", Integer, ForeignKey("chamados.id"))
+
+    chamado = relationship("Chamado", back_populates="anexos")
 
 
 Base.metadata.create_all(bind=db)

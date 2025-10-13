@@ -1,10 +1,12 @@
 import customtkinter as ctk
 from database import db_configure as mydb
-from database.db_configure import Admin
+from database.db_configure import Admin, Chamado, session, Anexo
 from utils.auth import codigo
 from tkinter import filedialog
 import tkinter as tk
 import os
+
+caminho_anexo = None
 
 
 def tela_auth():
@@ -193,7 +195,41 @@ def limpar_formulario():
     label_ver_anexo.configure(text="Nenhum arquivo anexado", text_color="white")
 
 
+def anexar_arquivo():
+    global label_ver_anexo, caminho_anexo
+    caminho = filedialog.askopenfilename(
+        title="Selecione um arquivo",
+        filetypes=[("Todos os arquivos", "*.*")]
+    )
+    if caminho:
+        caminho_anexo = caminho
+        nome_arquivo = os.path.basename(caminho)
+        label_ver_anexo.configure(text=f"Arquivo anexado: {nome_arquivo}", text_color="#90EE90")
+
+
+# noinspection PyTypeChecker
+def salvar_chamado_com_anexo(nome, local, data, pc, descricao):
+    global caminho_anexo
+    chamado = Chamado(nome=nome, local=local, data=data, pc=pc, descricao=descricao)
+
+    if caminho_anexo:
+        with open(caminho_anexo, "rb") as f:
+            conteudo = f.read()
+        nome_arquivo = os.path.basename(caminho_anexo)
+        anexo = Anexo(nome_arquivo=nome_arquivo, conteudo=conteudo)
+        chamado.anexos.append(anexo)
+
+    session.add(chamado)
+    session.commit()
+
+    caminho_anexo = None
+    label_ver_anexo.configure(text="Nenhum arquivo anexado", text_color="white")
+
+
 def enviar_chamado():
+    from datetime import datetime
+    data_atual = datetime.now()
+    data_formatada = data_atual.strftime("%d/%m/%Y")
     nome_digitado = campo_nome.get()
     num_pc_digitado = campo_num_pc.get()
     local_escolhido = options_local.get()
@@ -215,26 +251,18 @@ def enviar_chamado():
     elif descricao_digitada == "":
         abrir_popup("É necessário preencher o campo com uma descrição")
         return
+    if local_escolhido == "Outro":
+        local_escolhido = outro_local_digitado
+    salvar_chamado_com_anexo(nome_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
+
     limpar_formulario()
-    # Configuração de envio para o DB
-    #teste
+
 
 campo_descricao.bind("<FocusIn>", on_focus_in)
 campo_descricao.bind("<FocusOut>", on_focus_out)
 
 label_anexo = ctk.CTkLabel(card, text="Anexo (opcional):", text_color="#898989")
 label_anexo.pack()
-
-
-def anexar_arquivo():
-    global label_ver_anexo
-    caminho = filedialog.askopenfilename(
-        title="Selecione um arquivo",
-        filetypes=[("Todos os arquivos", "*.*")]
-    )
-    nome_arquivo = os.path.basename(caminho)
-    label_ver_anexo.configure(text=f"arquivo anexado: {nome_arquivo}", text_color="#90EE90")
-
 
 botao = ctk.CTkButton(card, text="Anexar arquivo", command=anexar_arquivo)
 botao.pack(pady=10)
