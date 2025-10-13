@@ -1,34 +1,69 @@
 import customtkinter as ctk
+import os
+import tkinter as tk
+import sys
 from database import db_configure as mydb
 from database.db_configure import Admin, Chamado, session, Anexo
 from utils.auth import codigo
 from tkinter import filedialog
-import tkinter as tk
-import os
 
 caminho_anexo = None
+tela_login_admin = None
+tela_autenticacao = None
+
+def fechar_app():
+    app.destroy()  # Fecha a janela
+    sys.exit()  # Encerra completamente o programa
 
 
+# noinspection PyUnresolvedReferences
+def tela_admin():
+    #tela_autenticacao.withdraw() TEMPORARIAMENTE DESABILITADA
+    tela_principal_admin = ctk.CTkToplevel(app)
+    tela_principal_admin.geometry("1200x700")
+    tela_principal_admin.title("Central do Administrador")
+    tela_principal_admin.resizable(False, False)
+
+
+# noinspection PyUnresolvedReferences,PyTypeChecker
 def tela_auth():
-    tela_autencicacao = ctk.CTkToplevel(app)
-    tela_autencicacao.geometry("500x400")
-    tela_autencicacao.title("Autenticação de 2 fatores")
+    global tela_autenticacao
+    tela_login_admin.withdraw()
+    tela_autenticacao = ctk.CTkToplevel(app)
+    tela_autenticacao.geometry("600x500")
+    tela_autenticacao.title("Autenticação de 2 fatores")
+    tela_autenticacao.resizable(False, False)
+    tela_autenticacao.update()
+    tela_autenticacao.focus_force()
+    card_tela_auth = ctk.CTkFrame(tela_autenticacao, width=300, height=300)
+    card_tela_auth.place(x=150, y=80)
 
+    def voltar_app():
+        tela_autenticacao.withdraw()
+        app.deiconify()
+
+    # noinspection PyTypeChecker
     def verificar_codigo_auth():
         codigo_digitado = campo_codigo.get()
         if codigo.verify(codigo_digitado):
             resultado_auth.configure(text="Autenticação bem sucedida!", text_color="green")
         else:
             resultado_auth.configure(text="Autenticação falhou", text_color="red")
+        if resultado_auth.cget("text").strip() == "Autenticação falhou":
+            resultado_auth.place(x=90, y=245)
+        else:
+            resultado_auth.place(x=75, y=245)
+            tela_autenticacao.after(1200, tela_admin)
 
-    campo_codigo = ctk.CTkEntry(tela_autencicacao, placeholder_text="digite seu codigo aqui", width=220, height=70,
+    campo_codigo = ctk.CTkEntry(card_tela_auth, placeholder_text="digite seu codigo aqui", width=220, height=70,
                                 font=("Arial", 18), justify="center")
-    campo_codigo.place(x=(500 - 220) / 2, y=150)
-
-    btn_auth = ctk.CTkButton(tela_autencicacao, text="Verificar", width=140, height=30, command=verificar_codigo_auth)
-    btn_auth.place(x=(500 - 140) / 2, y=240)
-    resultado_auth = ctk.CTkLabel(tela_autencicacao, text="")
-    resultado_auth.place(x=190, y=325)
+    campo_codigo.place(x=40, y=85)
+    btn_auth = ctk.CTkButton(card_tela_auth, text="Verificar", width=140, height=30, command=verificar_codigo_auth)
+    btn_auth.place(x=82, y=190)
+    resultado_auth = ctk.CTkLabel(card_tela_auth, text="")
+    btn_voltar = ctk.CTkButton(tela_autenticacao, text="Voltar", command=voltar_app)
+    btn_voltar.place(x=455, y=85)
+    tela_autenticacao.protocol("WM_DELETE_WINDOW", fechar_app)
 
 
 # noinspection PyTypeChecker
@@ -36,6 +71,10 @@ def tela_auth():
 
 def abrir_login_admin():
     app.withdraw()
+
+    def voltar_app():
+        tela_login_admin.withdraw()
+        app.deiconify()
 
     def verificar_login():
         email_digitado = campo_email.get()
@@ -55,21 +94,33 @@ def abrir_login_admin():
         resultado_login.configure(text=texto, text_color=cor)
         app.after(2000, lambda: resultado_login.configure(text=""))
 
+    global tela_login_admin
     tela_login_admin = ctk.CTkToplevel(app)
-    tela_login_admin.geometry("300x300")
+    tela_login_admin.geometry("600x500")
     tela_login_admin.title("Login de Administrador")
-    label_email = ctk.CTkLabel(tela_login_admin, text="Email: ")
+    tela_login_admin.resizable(False, False)
+    tela_login_admin.update()
+    tela_login_admin.focus_force()
+
+    card_login_adm = ctk.CTkFrame(tela_login_admin, corner_radius=15, width=250, height=300)
+    card_login_adm.pack(pady=30)
+    card_login_adm.pack_propagate(False)
+
+    label_email = ctk.CTkLabel(card_login_adm, text="Email: ")
     label_email.pack(pady=10)
-    campo_email = ctk.CTkEntry(tela_login_admin, placeholder_text="Digite seu email", width=200)
+    campo_email = ctk.CTkEntry(card_login_adm, placeholder_text="Digite seu email", width=200)
     campo_email.pack(pady=10)
-    label_senha = ctk.CTkLabel(tela_login_admin, text="Senha: ")
+    label_senha = ctk.CTkLabel(card_login_adm, text="Senha: ")
     label_senha.pack(pady=10)
-    campo_senha = ctk.CTkEntry(tela_login_admin, placeholder_text="Digite sua senha", show="*", width=200)
+    campo_senha = ctk.CTkEntry(card_login_adm, placeholder_text="Digite sua senha", show="*", width=200)
     campo_senha.pack(pady=10)
-    botao_login = ctk.CTkButton(tela_login_admin, text="login", command=verificar_login)
+    botao_login = ctk.CTkButton(card_login_adm, text="login", command=verificar_login)
     botao_login.pack(pady=10)
-    resultado_login = ctk.CTkLabel(tela_login_admin, text="")
+    resultado_login = ctk.CTkLabel(card_login_adm, text="")
     resultado_login.pack(pady=10)
+    btn_voltar = ctk.CTkButton(tela_login_admin, text="Voltar", command=voltar_app)
+    btn_voltar.place(x=450, y=35)
+    tela_login_admin.protocol("WM_DELETE_WINDOW", fechar_app)
 
 
 # Criação da GUI
@@ -150,17 +201,19 @@ placeholder = "Descreva o problema encontrado no computador..."
 campo_descricao.insert("1.0", placeholder)
 
 
+# noinspection PyUnusedLocal
 def on_focus_in(event):
     if campo_descricao.get("1.0", "end-1c") == placeholder:
         campo_descricao.delete("1.0", "end")
 
 
+# noinspection PyUnusedLocal
 def on_focus_out(event):
     if campo_descricao.get("1.0", "end-1c").strip() == "":
         campo_descricao.insert("1.0", placeholder)
 
 
-def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="400x170", expansivel=False):
+def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="450x180", icon="️⚠️", expansivel=False):
     popup = ctk.CTkToplevel(app)
     popup.title(titulo)
     popup.geometry(tamanho)
@@ -173,8 +226,7 @@ def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="400x170", expan
     frame_msg = ctk.CTkFrame(popup, fg_color="transparent")
     frame_msg.pack(pady=15, padx=10, fill="x")
 
-    # Ícone de aviso
-    icone_label = ctk.CTkLabel(frame_msg, text="⚠️", font=("Arial", 30))
+    icone_label = ctk.CTkLabel(frame_msg, text=icon, font=("Arial", 30))
     icone_label.pack(side="left", padx=10)
 
     msg_label = ctk.CTkLabel(frame_msg, text=mensagem, font=("Arial", 12))
@@ -230,12 +282,11 @@ def enviar_chamado():
     from datetime import datetime
     data_atual = datetime.now()
     data_formatada = data_atual.strftime("%d/%m/%Y")
-    nome_digitado = campo_nome.get()
-    num_pc_digitado = campo_num_pc.get()
-    local_escolhido = options_local.get()
-    outro_local_digitado = campo_outra_opc.get()
-    descricao_digitada = campo_descricao.get("1.0", "end-1c")
-
+    nome_digitado = campo_nome.get().strip()
+    num_pc_digitado = campo_num_pc.get().strip()
+    local_escolhido = options_local.get().strip()
+    outro_local_digitado = campo_outra_opc.get().strip()
+    descricao_digitada = campo_descricao.get("1.0", "end-1c").strip()
     if nome_digitado == "":
         abrir_popup("É necessário preencher o campo nome")
         return
@@ -248,12 +299,13 @@ def enviar_chamado():
     elif outro_local_digitado == "" and local_escolhido == "Outro":
         abrir_popup("É necessário preencher o campo Local")
         return
-    elif descricao_digitada == "":
+    elif not descricao_digitada or descricao_digitada == placeholder:
         abrir_popup("É necessário preencher o campo com uma descrição")
         return
     if local_escolhido == "Outro":
         local_escolhido = outro_local_digitado
     salvar_chamado_com_anexo(nome_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
+    abrir_popup("Chamado Enviado com sucesso", titulo="Chamado Enviado", icon="✅")
 
     limpar_formulario()
 
@@ -271,7 +323,9 @@ label_ver_anexo.pack(pady=3)
 btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado", command=enviar_chamado)
 btn_enviar_chamado.pack(pady=10)
 
-btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
+#btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
+btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
 btn_abrir_Login_admin.place(x=645, y=35)
+app.protocol("WM_DELETE_WINDOW", fechar_app)
 
 app.mainloop()
