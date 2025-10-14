@@ -323,8 +323,8 @@ label_ver_anexo.pack(pady=3)
 btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado", command=enviar_chamado)
 btn_enviar_chamado.pack(pady=10)
 
-#btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
-btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
+btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
+#btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
 btn_abrir_Login_admin.place(x=645, y=35)
 app.protocol("WM_DELETE_WINDOW", fechar_app)
 
