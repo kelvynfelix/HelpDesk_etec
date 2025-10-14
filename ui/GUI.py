@@ -24,6 +24,7 @@ def fechar_app():
 # noinspection PyUnresolvedReferences
 def tela_admin():
     # tela_autenticacao.withdraw() TEMPORARIAMENTE DESABILITADA
+    global filtrar_chamados
     tela_principal_admin = ctk.CTkToplevel(app)
     tela_principal_admin.geometry("1200x700")
     tela_principal_admin.title("Central do Administrador")
@@ -51,6 +52,7 @@ def tela_admin():
     campo_filtro_estado = ctk.CTkOptionMenu(card_admin, values=["SIM", "NÃO"])
     campo_filtro_estado.set("Pendente?")
     campo_filtro_estado.place(x=700, y=180)
+
     # ================== MOSTRAR DADOS DO BD ====================
 
     frame_tabela = ctk.CTkFrame(card_admin, width=900, height=250, corner_radius=15)
@@ -98,7 +100,6 @@ def tela_admin():
         if not item_id:
             return
 
-        # se clicou na última coluna ("Ação"/"Anexos")
         if coluna == f"#{len(tabela["columns"])}":
             valores = tabela.item(item_id, "values")
             chamado_id = valores[0]
@@ -108,7 +109,6 @@ def tela_admin():
                 messagebox.showinfo("Sem anexos", "Este chamado não possui anexos.")
                 return
 
-            # abre janela mostrando a(s) imagem(ns)
             janela = tk.Toplevel()
             janela.title(f"Anexos de {chamado.nome}")
             for anexo in chamado.anexos:
@@ -149,6 +149,59 @@ def tela_admin():
 
     tabela.pack(fill="both", expand=True, padx=10, pady=10)
 
+#==================== AREA FILTROS ===================
+    def filtrar_chamados():
+        # Pegando os valores dos filtros
+        nome_filtro = campo_filtro_nome.get().lower()
+        local_filtro = campo_filtro_local.get().lower()
+        pc_filtro = campo_filtro_num_pc.get().lower()
+        pendente_filtro = campo_filtro_estado.get().lower()  # "Sim", "Não" ou vazio
+        data_filtro = campo_filtro_data.get()  # retorna string no formato do DateEntry
+
+        # Limpa a Treeview
+        for item in tabela.get_children():
+            tabela.delete(item)
+
+        # Loop pelos dados originais
+        for chamado in chamados:
+            # Filtro por nome, local e pc (texto)
+            if nome_filtro not in chamado.nome.lower():
+                continue
+            if local_filtro not in chamado.local.lower():
+                continue
+            if pc_filtro not in chamado.pc.lower():
+                continue
+
+            # Filtro pendente
+            if pendente_filtro:
+                if pendente_filtro == "sim" and not chamado.pendente:
+                    continue
+                elif pendente_filtro == "não" and chamado.pendente:
+                    continue
+
+            # Filtro data
+            if data_filtro:
+                if chamado.data != data_filtro:
+                    continue
+
+            # Preparar descrição e anexos
+            descricao_quebrada = quebrar_texto(chamado.descricao)
+            anexos_texto = "📎 Ver Anexo" if chamado.anexos else ""
+
+            # Inserir na tabela
+            tabela.insert("", "end", values=(
+                chamado.id,
+                chamado.nome,
+                chamado.local,
+                chamado.data,
+                chamado.pc,
+                "Sim" if chamado.pendente else "Não",
+                descricao_quebrada,
+                anexos_texto
+            ))
+
+    btn_filtrar = ttk.Button(card_admin, text="Filtrar", command=filtrar_chamados)
+    btn_filtrar.place(x=850, y=180)
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def tela_auth():
