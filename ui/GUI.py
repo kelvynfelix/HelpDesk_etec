@@ -1,15 +1,20 @@
 import customtkinter as ctk
 import os
 import tkinter as tk
+from tkinter import ttk, messagebox
 import sys
 from database import db_configure as mydb
 from database.db_configure import Admin, Chamado, session, Anexo
 from utils.auth import codigo
 from tkinter import filedialog
+from tkcalendar import DateEntry
+from PIL import Image, ImageTk
+from io import BytesIO
 
 caminho_anexo = None
 tela_login_admin = None
 tela_autenticacao = None
+
 
 def fechar_app():
     app.destroy()  # Fecha a janela
@@ -18,11 +23,131 @@ def fechar_app():
 
 # noinspection PyUnresolvedReferences
 def tela_admin():
-    #tela_autenticacao.withdraw() TEMPORARIAMENTE DESABILITADA
+    # tela_autenticacao.withdraw() TEMPORARIAMENTE DESABILITADA
     tela_principal_admin = ctk.CTkToplevel(app)
     tela_principal_admin.geometry("1200x700")
     tela_principal_admin.title("Central do Administrador")
-    tela_principal_admin.resizable(False, False)
+    # tela_principal_admin.resizable(False, False)
+
+    card_admin = ctk.CTkFrame(tela_principal_admin, width=1000, height=500)
+    card_admin.place(x=120, y=100)
+    label_admin_titulo = ctk.CTkLabel(card_admin, text="Painel de Administrador", fg_color="#2b2b2b",
+                                      bg_color="#2b2b2b", font=("Arial", 19, "bold"), text_color="#00BFFF")
+    label_admin_titulo.place(x=390, y=75)
+    label_admin_subtitulo = ctk.CTkLabel(card_admin,
+                                         text="Gerencie, filtre e visualize todos os chamados registrados no sistema da ETEC",
+                                         fg_color="#2b2b2b", bg_color="#2b2b2b", font=("Arial", 12, "bold"),
+                                         text_color="#646464")
+    label_admin_subtitulo.place(x=275, y=100)
+    campo_filtro_nome = ctk.CTkEntry(card_admin, placeholder_text="Filtre por nome...", bg_color="#2b2b2b")
+    campo_filtro_nome.place(x=130, y=180)
+    campo_filtro_local = ctk.CTkEntry(card_admin, placeholder_text="Filtre pelo local...", bg_color="#2b2b2b")
+    campo_filtro_local.place(x=275, y=180)
+    campo_filtro_data = DateEntry(card_admin, font=("Arial", 14, "bold"), background="darkblue",
+                                  date_pattern="dd/MM/yyyy")
+    campo_filtro_data.place(x=525, y=227)
+    campo_filtro_num_pc = ctk.CTkEntry(card_admin, placeholder_text="N° de PC...", bg_color="#2b2b2b")
+    campo_filtro_num_pc.place(x=555, y=180)
+    campo_filtro_estado = ctk.CTkOptionMenu(card_admin, values=["SIM", "NÃO"])
+    campo_filtro_estado.set("Pendente?")
+    campo_filtro_estado.place(x=700, y=180)
+    # ================== MOSTRAR DADOS DO BD ====================
+
+    frame_tabela = ctk.CTkFrame(card_admin, width=900, height=250, corner_radius=15)
+    frame_tabela.place(x=75, y=220)
+    frame_tabela.pack_propagate(False)
+    colunas = ("ID", "Nome", "Local", "Data", "PC", "Pendente", "Descrição", "Anexo")
+    tabela = ttk.Treeview(frame_tabela, columns=colunas, show="headings", height=8)
+    for coluna in colunas:
+        tabela.heading(coluna, text=coluna)
+    tabela.column("ID", width=40, anchor="center")
+    tabela.column("Nome", width=120, anchor="center")
+    tabela.column("Local", width=100, anchor="center")
+    tabela.column("Data", width=100, anchor="center")
+    tabela.column("PC", width=80, anchor="center")
+    tabela.column("Pendente", width=80, anchor="center")
+    tabela.column("Descrição", width=280, anchor="w")
+    tabela.column("Anexo", width=80, anchor="center")
+    estilo = ttk.Style()
+    estilo.theme_use("clam")
+
+    estilo.configure("Treeview",
+                     background="#1e1e2f",
+                     foreground="white",
+                     rowheight=30,
+                     fieldbackground="#1e1e2f",
+                     bordercolor="#2a2a3d",
+                     borderwidth=0
+                     )
+    estilo.configure("Treeview.Heading",
+                     background="#0f2748",
+                     foreground="#00b4ff",
+                     relief="flat",
+                     font=("Arial", 12, "bold")
+                     )
+    estilo.map("Treeview",
+               background=[("selected", "#0078d7")]
+               )
+
+    # ====================== DADOS DO BD ======================
+    # noinspection PyTypeChecker
+    def ao_duplo_clique(event):
+        item_id = tabela.identify_row(event.y)
+        coluna = tabela.identify_column(event.x)
+
+        if not item_id:
+            return
+
+        # se clicou na última coluna ("Ação"/"Anexos")
+        if coluna == f"#{len(tabela["columns"])}":
+            valores = tabela.item(item_id, "values")
+            chamado_id = valores[0]
+
+            chamado = session.query(Chamado).filter_by(id=chamado_id).first()
+            if not chamado or not chamado.anexos:
+                messagebox.showinfo("Sem anexos", "Este chamado não possui anexos.")
+                return
+
+            # abre janela mostrando a(s) imagem(ns)
+            janela = tk.Toplevel()
+            janela.title(f"Anexos de {chamado.nome}")
+            for anexo in chamado.anexos:
+                imagem = Image.open(BytesIO(anexo.conteudo))
+                imagem.thumbnail((500, 400))
+                img_tk = ImageTk.PhotoImage(imagem)
+                lbl = tk.Label(janela, image=img_tk, bg="#2b2b2b")
+                lbl.image = img_tk
+                lbl.pack(pady=10)
+
+    tabela.bind("<Double-1>", ao_duplo_clique)
+
+    chamados = session.query(Chamado).all()
+    import textwrap
+
+    def quebrar_texto(texto, largura=50):
+        return "\n".join(textwrap.wrap(texto, largura))
+
+    for item in chamados:
+        descricao_quebrada = quebrar_texto(item.descricao)
+
+        # Se houver anexos, mostra "📎 Ver Anexo", senão deixa vazio
+        if item.anexos:
+            anexos_texto = "📎 Ver Anexo"
+        else:
+            anexos_texto = ""
+
+        tabela.insert("", "end", values=(
+            item.id,
+            item.nome,
+            item.local,
+            item.data,
+            item.pc,
+            "Sim" if item.pendente else "Não",
+            descricao_quebrada,
+            anexos_texto
+        ))
+
+    tabela.pack(fill="both", expand=True, padx=10, pady=10)
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
@@ -53,7 +178,7 @@ def tela_auth():
             resultado_auth.place(x=90, y=245)
         else:
             resultado_auth.place(x=75, y=245)
-            tela_autenticacao.after(1200, tela_admin)
+            tela_autenticacao.after(1500, tela_admin)
 
     campo_codigo = ctk.CTkEntry(card_tela_auth, placeholder_text="digite seu codigo aqui", width=220, height=70,
                                 font=("Arial", 18), justify="center")
@@ -323,8 +448,8 @@ label_ver_anexo.pack(pady=3)
 btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado", command=enviar_chamado)
 btn_enviar_chamado.pack(pady=10)
 
-btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
-#btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
+# btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
+btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
 btn_abrir_Login_admin.place(x=645, y=35)
 app.protocol("WM_DELETE_WINDOW", fechar_app)
 
