@@ -3,7 +3,10 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from sqlalchemy.orm import relationship
 
-caminho_db = os.path.abspath("C:/Dev/Projetos/HelpDesk/database/db_etec.db")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_folder = os.path.join(BASE_DIR, "database")
+os.makedirs(db_folder, exist_ok=True)
+caminho_db = os.path.join(db_folder, "db_etec.db")
 db = create_engine(f"sqlite:///{caminho_db}")
 Session = sessionmaker(bind=db)
 session = Session()
@@ -42,6 +45,19 @@ class Chamado(Base):
         self.pendente = pendente
         self.descricao = descricao
         self.anexos = anexos or []
+
+
+class Aluno(Base):
+    __tablename__ = "alunos"
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    email = Column("email", String)
+    nome = Column("nome", String)
+    senha = Column("senha", String)
+
+    def __init__(self, nome, email, senha):
+        self.nome = nome
+        self.email = email
+        self.senha = senha
 
 
 class Anexo(Base):

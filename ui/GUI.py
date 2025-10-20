@@ -23,7 +23,7 @@ def fechar_app():
 
 # noinspection PyUnresolvedReferences
 def tela_admin():
-    # tela_autenticacao.withdraw() TEMPORARIAMENTE DESABILITADA
+    tela_autenticacao.withdraw() #TEMPORARIAMENTE DESABILITADA
     global filtrar_chamados
     tela_principal_admin = ctk.CTkToplevel(app)
     tela_principal_admin.geometry("1200x700")
@@ -130,7 +130,6 @@ def tela_admin():
     for item in chamados:
         descricao_quebrada = quebrar_texto(item.descricao)
 
-        # Se houver anexos, mostra "📎 Ver Anexo", senão deixa vazio
         if item.anexos:
             anexos_texto = "📎 Ver Anexo"
         else:
@@ -150,13 +149,14 @@ def tela_admin():
     tabela.pack(fill="both", expand=True, padx=10, pady=10)
 
 #==================== AREA FILTROS ===================
+
     def filtrar_chamados():
         # Pegando os valores dos filtros
         nome_filtro = campo_filtro_nome.get().lower()
         local_filtro = campo_filtro_local.get().lower()
         pc_filtro = campo_filtro_num_pc.get().lower()
-        pendente_filtro = campo_filtro_estado.get().lower()  # "Sim", "Não" ou vazio
-        data_filtro = campo_filtro_data.get()  # retorna string no formato do DateEntry
+        pendente_filtro = campo_filtro_estado.get().lower()
+        data_filtro = campo_filtro_data.get()
 
         # Limpa a Treeview
         for item in tabela.get_children():
@@ -202,6 +202,46 @@ def tela_admin():
 
     btn_filtrar = ttk.Button(card_admin, text="Filtrar", command=filtrar_chamados)
     btn_filtrar.place(x=850, y=180)
+
+def tela_login_user():
+    app.withdraw()
+    def voltar_app():
+        tela_login_usuario_entrar.withdraw()
+        app.deiconify()
+    def cadastrar_aluno():
+        print("Hello world!")
+
+    tela_login_usuario_entrar = ctk.CTkToplevel(app)
+    tela_login_usuario_entrar.geometry("600x500")
+    tela_login_usuario_entrar.title("Login de Aluno")
+    tela_login_usuario_entrar.resizable(False, False)
+    tela_login_usuario_entrar.update()
+    tela_login_usuario_entrar.focus_force()
+    card_tela_user = ctk.CTkFrame(tela_login_usuario_entrar, width=300, height=300)
+    card_tela_user.place(x=150, y=80)
+    label_email_user = ctk.CTkLabel(card_tela_user, text="Email:")
+    label_email_user.place(x=30, y=30)
+    campo_email_user = ctk.CTkEntry(card_tela_user, placeholder_text="Digite seu Email", width=250, height=40)
+    campo_email_user.place(x=25, y=60)
+    label_senha_user = ctk.CTkLabel(card_tela_user, text="Senha:")
+    label_senha_user.place(x=30, y=130)
+    campo_senha_user = ctk.CTkEntry(card_tela_user, placeholder_text="Digite sua Senha", width=250, height=40)
+    campo_senha_user.place(x=25, y=160)
+    btn_logar_aluno = ctk.CTkButton(card_tela_user, text="Logar", width=150, height=35, font=("arial", 15))
+    btn_logar_aluno.place(x=76, y=230)
+    btn_voltar = ctk.CTkButton(tela_login_usuario_entrar, text="Voltar", command=voltar_app)
+    btn_voltar.place(x=455, y=85)
+    btn_cadastrar = ctk.CTkButton(tela_login_usuario_entrar, text="Criar Conta", command=cadastrar_aluno, width=150, height=35,  font=("arial", 15))
+    btn_cadastrar.place(x=226, y=400)
+
+
+
+
+
+
+
+
+
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def tela_auth():
@@ -314,10 +354,10 @@ card.pack_propagate(False)
 
 label_chamados_titulo = ctk.CTkLabel(card, text="Chamados", text_color="#00BFFF", font=("Arial", 18, "bold"))
 label_chamados_titulo.pack(pady=10)
-label_nome = ctk.CTkLabel(card, text="Nome Completo:", text_color="#898989")
+label_nome = ctk.CTkLabel(card, text="Email:", text_color="#898989")
 label_nome.pack(side="top", anchor="w", padx="100")
-campo_nome = ctk.CTkEntry(card, placeholder_text="Digite seu nome Completo", width=300, justify="center", height=40)
-campo_nome.pack()
+campo_email = ctk.CTkEntry(card, placeholder_text="Digite seu Email", width=300, justify="center", height=40)
+campo_email.pack()
 
 label_num_pc = ctk.CTkLabel(card, text="Número do pc:", text_color="#898989")
 label_num_pc.pack(side="top", anchor="w", padx="100")
@@ -417,7 +457,7 @@ def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="450x180", icon=
 # noinspection PyGlobalUndefined
 def limpar_formulario():
     global caminho_anexo
-    for campo in [campo_nome, campo_num_pc, campo_outra_opc]:  # apenas Entry aqui
+    for campo in [campo_email, campo_num_pc, campo_outra_opc]:  # apenas Entry aqui
         campo.delete(0, "end")
     campo_descricao.delete("1.0", "end")
     options_local.set("Selecione o Local")
@@ -460,13 +500,14 @@ def enviar_chamado():
     from datetime import datetime
     data_atual = datetime.now()
     data_formatada = data_atual.strftime("%d/%m/%Y")
-    nome_digitado = campo_nome.get().strip()
+    email_digitado = campo_email.get().strip()
+    email_valido = campo_email.get().find("@")
     num_pc_digitado = campo_num_pc.get().strip()
     local_escolhido = options_local.get().strip()
     outro_local_digitado = campo_outra_opc.get().strip()
     descricao_digitada = campo_descricao.get("1.0", "end-1c").strip()
-    if nome_digitado == "":
-        abrir_popup("É necessário preencher o campo nome")
+    if email_digitado == "":
+        abrir_popup(f"É necessário preencher o campo email {email_valido}")
         return
     elif num_pc_digitado == "":
         abrir_popup("É necessário preencher o campo número da máquina")
@@ -482,7 +523,7 @@ def enviar_chamado():
         return
     if local_escolhido == "Outro":
         local_escolhido = outro_local_digitado
-    salvar_chamado_com_anexo(nome_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
+    salvar_chamado_com_anexo(email_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
     abrir_popup("Chamado Enviado com sucesso", titulo="Chamado Enviado", icon="✅")
 
     limpar_formulario()
@@ -501,9 +542,11 @@ label_ver_anexo.pack(pady=3)
 btn_enviar_chamado = ctk.CTkButton(card, text="Enviar Chamado", command=enviar_chamado)
 btn_enviar_chamado.pack(pady=10)
 
-# btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
-btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
+btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=abrir_login_admin)
+btn_abrir_login_usuario = ctk.CTkButton(app, text="Login Aluno", command=tela_login_user)
+# btn_abrir_Login_admin = ctk.CTkButton(app, text="Login Admin", command=tela_admin)
 btn_abrir_Login_admin.place(x=645, y=35)
+btn_abrir_login_usuario.place(x=645, y=70)
 app.protocol("WM_DELETE_WINDOW", fechar_app)
 
 app.mainloop()
