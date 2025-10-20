@@ -211,6 +211,7 @@ def tela_login_user():
     def cadastrar_aluno():
         print("Hello world!")
 
+
     tela_login_usuario_entrar = ctk.CTkToplevel(app)
     tela_login_usuario_entrar.geometry("600x500")
     tela_login_usuario_entrar.title("Login de Aluno")
