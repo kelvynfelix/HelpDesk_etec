@@ -573,6 +573,7 @@ def enviar_chamado():
     salvar_chamado_com_anexo(email_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
 
 
+
 campo_descricao.bind("<FocusIn>", on_focus_in)
 campo_descricao.bind("<FocusOut>", on_focus_out)
 
