@@ -3,10 +3,10 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from sqlalchemy.orm import relationship
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_folder = os.path.join(BASE_DIR, "database")
-os.makedirs(db_folder, exist_ok=True)
-caminho_db = os.path.join(db_folder, "db_etec.db")
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+caminho_db = os.path.join(BASE_DIR, "database", "db_etec.db")
+os.makedirs(os.path.dirname(caminho_db), exist_ok=True)
+
 db = create_engine(f"sqlite:///{caminho_db}")
 Session = sessionmaker(bind=db)
 session = Session()

@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sys
+import re
 from database import db_configure as mydb
 from database.db_configure import Admin, Chamado, session, Anexo
 from utils.auth import codigo
@@ -23,7 +24,7 @@ def fechar_app():
 
 # noinspection PyUnresolvedReferences
 def tela_admin():
-    tela_autenticacao.withdraw() #TEMPORARIAMENTE DESABILITADA
+    tela_autenticacao.withdraw()  # TEMPORARIAMENTE DESABILITADA
     global filtrar_chamados
     tela_principal_admin = ctk.CTkToplevel(app)
     tela_principal_admin.geometry("1200x700")
@@ -148,7 +149,7 @@ def tela_admin():
 
     tabela.pack(fill="both", expand=True, padx=10, pady=10)
 
-#==================== AREA FILTROS ===================
+    # ==================== AREA FILTROS ===================
 
     def filtrar_chamados():
         # Pegando os valores dos filtros
@@ -203,14 +204,16 @@ def tela_admin():
     btn_filtrar = ttk.Button(card_admin, text="Filtrar", command=filtrar_chamados)
     btn_filtrar.place(x=850, y=180)
 
+
 def tela_login_user():
     app.withdraw()
+
     def voltar_app():
         tela_login_usuario_entrar.withdraw()
         app.deiconify()
+
     def cadastrar_aluno():
         print("Hello world!")
-
 
     tela_login_usuario_entrar = ctk.CTkToplevel(app)
     tela_login_usuario_entrar.geometry("600x500")
@@ -222,26 +225,19 @@ def tela_login_user():
     card_tela_user.place(x=150, y=80)
     label_email_user = ctk.CTkLabel(card_tela_user, text="Email:")
     label_email_user.place(x=30, y=30)
-    campo_email_user = ctk.CTkEntry(card_tela_user, placeholder_text="Digite seu Email", width=250, height=40)
-    campo_email_user.place(x=25, y=60)
+    campo_email_logar = ctk.CTkEntry(card_tela_user, placeholder_text="Digite seu Email", width=250, height=40)
+    campo_email_logar.place(x=25, y=60)
     label_senha_user = ctk.CTkLabel(card_tela_user, text="Senha:")
     label_senha_user.place(x=30, y=130)
-    campo_senha_user = ctk.CTkEntry(card_tela_user, placeholder_text="Digite sua Senha", width=250, height=40)
-    campo_senha_user.place(x=25, y=160)
+    campo_senha_logar = ctk.CTkEntry(card_tela_user, placeholder_text="Digite sua Senha", width=250, height=40)
+    campo_senha_logar.place(x=25, y=160)
     btn_logar_aluno = ctk.CTkButton(card_tela_user, text="Logar", width=150, height=35, font=("arial", 15))
     btn_logar_aluno.place(x=76, y=230)
     btn_voltar = ctk.CTkButton(tela_login_usuario_entrar, text="Voltar", command=voltar_app)
     btn_voltar.place(x=455, y=85)
-    btn_cadastrar = ctk.CTkButton(tela_login_usuario_entrar, text="Criar Conta", command=cadastrar_aluno, width=150, height=35,  font=("arial", 15))
+    btn_cadastrar = ctk.CTkButton(tela_login_usuario_entrar, text="Criar Conta", command=cadastrar_aluno, width=150,
+                                  height=35, font=("arial", 15))
     btn_cadastrar.place(x=226, y=400)
-
-
-
-
-
-
-
-
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
@@ -263,7 +259,7 @@ def tela_auth():
 
     # noinspection PyTypeChecker
     def verificar_codigo_auth():
-        codigo_digitado = campo_codigo.get()
+        codigo_digitado = campo_codigo.get().strip()
         if codigo.verify(codigo_digitado):
             resultado_auth.configure(text="Autenticação bem sucedida!", text_color="green")
         else:
@@ -274,6 +270,10 @@ def tela_auth():
             resultado_auth.place(x=75, y=245)
             tela_autenticacao.after(1500, tela_admin)
 
+    label_autenticacao = ctk.CTkLabel(card_tela_auth,
+                                      text="Digite o código de 2 fatores para\n verificar o seu usuário.",
+                                      font=("Arial", 15))
+    label_autenticacao.place(x=37, y=35)
     campo_codigo = ctk.CTkEntry(card_tela_auth, placeholder_text="digite seu codigo aqui", width=220, height=70,
                                 font=("Arial", 18), justify="center")
     campo_codigo.place(x=40, y=85)
@@ -296,13 +296,13 @@ def abrir_login_admin():
         app.deiconify()
 
     def verificar_login():
-        email_digitado = campo_email.get()
-        senha_digitada = campo_senha.get()
+
+        email_digitado = campo_email_admin.get().strip().lower()
+        senha_digitada = campo_senha_admin.get().strip()
         admin_db = mydb.session.query(Admin).filter_by(email=email_digitado, senha=senha_digitada).first()
         if admin_db:
             if email_digitado == admin_db.email and senha_digitada == admin_db.senha:
-                tela_auth()
-                mostrar_mensagem_app("Login feito com sucesso!", "green")
+                abrir_popup("Login feito com sucesso!", "OK", ao_confirmar=tela_auth)
             else:
                 mostrar_mensagem_app("Login incorreto!")
         else:
@@ -327,12 +327,12 @@ def abrir_login_admin():
 
     label_email = ctk.CTkLabel(card_login_adm, text="Email: ")
     label_email.pack(pady=10)
-    campo_email = ctk.CTkEntry(card_login_adm, placeholder_text="Digite seu email", width=200)
-    campo_email.pack(pady=10)
+    campo_email_admin = ctk.CTkEntry(card_login_adm, placeholder_text="Digite seu email", width=200)
+    campo_email_admin.pack(pady=10)
     label_senha = ctk.CTkLabel(card_login_adm, text="Senha: ")
     label_senha.pack(pady=10)
-    campo_senha = ctk.CTkEntry(card_login_adm, placeholder_text="Digite sua senha", show="*", width=200)
-    campo_senha.pack(pady=10)
+    campo_senha_admin = ctk.CTkEntry(card_login_adm, placeholder_text="Digite sua senha", show="*", width=200)
+    campo_senha_admin.pack(pady=10)
     botao_login = ctk.CTkButton(card_login_adm, text="login", command=verificar_login)
     botao_login.pack(pady=10)
     resultado_login = ctk.CTkLabel(card_login_adm, text="")
@@ -357,8 +357,8 @@ label_chamados_titulo = ctk.CTkLabel(card, text="Chamados", text_color="#00BFFF"
 label_chamados_titulo.pack(pady=10)
 label_nome = ctk.CTkLabel(card, text="Email:", text_color="#898989")
 label_nome.pack(side="top", anchor="w", padx="100")
-campo_email = ctk.CTkEntry(card, placeholder_text="Digite seu Email", width=300, justify="center", height=40)
-campo_email.pack()
+campo_email_user = ctk.CTkEntry(card, placeholder_text="Digite seu Email", width=300, justify="center", height=40)
+campo_email_user.pack()
 
 label_num_pc = ctk.CTkLabel(card, text="Número do pc:", text_color="#898989")
 label_num_pc.pack(side="top", anchor="w", padx="100")
@@ -432,16 +432,15 @@ def on_focus_out(event):
         campo_descricao.insert("1.0", placeholder)
 
 
-def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="450x180", icon="️⚠️", expansivel=False):
+def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="450x180", icon="⚠️", expansivel=False,
+                ao_confirmar=None):
     popup = ctk.CTkToplevel(app)
     popup.title(titulo)
     popup.geometry(tamanho)
     popup.resizable(expansivel, expansivel)
-
-    # ctk.CTkLabel(popup, text=mensagem).pack(pady=20)
-    # ctk.CTkButton(popup, text="OK", command=popup.destroy).pack(pady=10)
-    popup.grab_set()  # impede interação com a janela principal
+    popup.grab_set()
     popup.attributes("-topmost", True)
+
     frame_msg = ctk.CTkFrame(popup, fg_color="transparent")
     frame_msg.pack(pady=15, padx=10, fill="x")
 
@@ -451,14 +450,19 @@ def abrir_popup(mensagem, txt_btn="OK", titulo="Aviso", tamanho="450x180", icon=
     msg_label = ctk.CTkLabel(frame_msg, text=mensagem, font=("Arial", 12))
     msg_label.pack(side="left", padx=10)
 
-    btn_ok = ctk.CTkButton(popup, text=txt_btn, width=110, command=popup.destroy)
+    def confirmar():
+        popup.destroy()
+        if ao_confirmar:
+            ao_confirmar()
+
+    btn_ok = ctk.CTkButton(popup, text=txt_btn, width=110, command=confirmar)
     btn_ok.pack(pady=10)
 
 
 # noinspection PyGlobalUndefined
 def limpar_formulario():
     global caminho_anexo
-    for campo in [campo_email, campo_num_pc, campo_outra_opc]:  # apenas Entry aqui
+    for campo in [campo_email_user, campo_num_pc, campo_outra_opc]:  # apenas Entry aqui
         campo.delete(0, "end")
     campo_descricao.delete("1.0", "end")
     options_local.set("Selecione o Local")
@@ -480,12 +484,29 @@ def anexar_arquivo():
 
 # noinspection PyTypeChecker
 def salvar_chamado_com_anexo(nome, local, data, pc, descricao):
+    MAX_SIZE_MB = 2  # tamanho máximo em MB
+    EXTENSOES_VALIDAS = (".jpg", ".jpeg", ".png")
     global caminho_anexo
     chamado = Chamado(nome=nome, local=local, data=data, pc=pc, descricao=descricao)
 
     if caminho_anexo:
+        ext = os.path.splitext(caminho_anexo)[1].lower()  # pega extensão em minúsculo
+        tamanho_mb = os.path.getsize(caminho_anexo) / (1024 * 1024)  # tamanho em MB
+
+        # Valida extensão
+        if ext not in EXTENSOES_VALIDAS:
+            abrir_popup(f"Arquivo inválido! Apenas {', '.join(EXTENSOES_VALIDAS)} são aceitos.")
+            return
+
+        # Valida tamanho
+        if tamanho_mb > MAX_SIZE_MB:
+            abrir_popup(f"Arquivo muito grande! Máximo permitido: {MAX_SIZE_MB}MB.")
+            return
+
+        # Se passou nas validações, lê o arquivo
         with open(caminho_anexo, "rb") as f:
             conteudo = f.read()
+
         nome_arquivo = os.path.basename(caminho_anexo)
         anexo = Anexo(nome_arquivo=nome_arquivo, conteudo=conteudo)
         chamado.anexos.append(anexo)
@@ -495,20 +516,21 @@ def salvar_chamado_com_anexo(nome, local, data, pc, descricao):
 
     caminho_anexo = None
     label_ver_anexo.configure(text="Nenhum arquivo anexado", text_color="white")
+    abrir_popup("Chamado salvo com sucesso!", "OK", titulo="Sucesso", icon="✅")
+    limpar_formulario()
 
 
 def enviar_chamado():
     from datetime import datetime
     data_atual = datetime.now()
     data_formatada = data_atual.strftime("%d/%m/%Y")
-    email_digitado = campo_email.get().strip()
-    email_valido = campo_email.get().find("@")
+    email_digitado = campo_email_user.get().strip().lower()
     num_pc_digitado = campo_num_pc.get().strip()
     local_escolhido = options_local.get().strip()
-    outro_local_digitado = campo_outra_opc.get().strip()
+    outro_local_digitado = campo_outra_opc.get().strip().lower()
     descricao_digitada = campo_descricao.get("1.0", "end-1c").strip()
-    if email_digitado == "":
-        abrir_popup(f"É necessário preencher o campo email {email_valido}")
+    if not email_digitado:
+        abrir_popup("É necessário preencher o campo de e-mail!")
         return
     elif num_pc_digitado == "":
         abrir_popup("É necessário preencher o campo número da máquina")
@@ -519,15 +541,36 @@ def enviar_chamado():
     elif outro_local_digitado == "" and local_escolhido == "Outro":
         abrir_popup("É necessário preencher o campo Local")
         return
+    elif len(outro_local_digitado.strip()) > 50:
+        abrir_popup("Local muito longo! Máximo 50 caracteres.")
+        return
+    if not re.match(r"^[a-zA-Z0-9\s\-./]+$", outro_local_digitado):
+        abrir_popup("Local contém caracteres inválidos!")
+        return
+
     elif not descricao_digitada or descricao_digitada == placeholder:
         abrir_popup("É necessário preencher o campo com uma descrição")
         return
+
+    elif not re.match(r"[^@]+@[^@]+\.[^@]+", email_digitado):
+        abrir_popup("E-mail inválido! Digite um e-mail válido\nex: usuario@dominio.com")
+        return
+    if num_pc_digitado.isdigit():
+        num_pc_digitado = int(num_pc_digitado)
+        if not (1 <= num_pc_digitado <= 20):
+            abrir_popup("Número de Pc inexistente! ")
+            return
+    else:
+        abrir_popup("Digite o Número da Maquina Válido!")
+        return
+    if descricao_digitada.lower() in ("nenhum", "nenhuma"):
+        abrir_popup("Digite uma descrição válida!")
+        return
+
     if local_escolhido == "Outro":
         local_escolhido = outro_local_digitado
-    salvar_chamado_com_anexo(email_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
-    abrir_popup("Chamado Enviado com sucesso", titulo="Chamado Enviado", icon="✅")
 
-    limpar_formulario()
+    salvar_chamado_com_anexo(email_digitado, local_escolhido, data_formatada, num_pc_digitado, descricao_digitada)
 
 
 campo_descricao.bind("<FocusIn>", on_focus_in)
